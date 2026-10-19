@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Command Deck</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    body {
+      background: #0a0e1a;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(56, 189, 248, 0.15), transparent),
+        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(99, 102, 241, 0.12), transparent),
+        radial-gradient(ellipse 50% 30% at 50% 50%, rgba(15, 23, 42, 0.8), transparent);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .glass {
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+    .card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 50%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .card:hover::before { opacity: 1; }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(56, 189, 248, 0.4);
+      box-shadow: 0 20px 40px -10px rgba(56, 189, 248, 0.2), 0 0 0 1px rgba(56, 189, 248, 0.15);
+    }
+    .icon-wrap { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .card:hover .icon-wrap { transform: scale(1.08); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .search-glow:focus {
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+    .status-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #22d3ee; box-shadow: 0 0 8px #22d3ee;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+    .filter-btn.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: #67e8f9;
+    }
+    .tab-btn.active { background: rgba(56,189,248,0.15); color: #67e8f9; }
+    .dropzone.dragover { border-color: #22d3ee; background: rgba(34,211,238,0.08); }
+    .doc-preview pre, .doc-preview code { white-space: pre-wrap; word-break: break-word; }
+  </style>
+</head>
+<body class="text-slate-200 antialiased relative z-10">
+  <div class="max-w-7xl mx-auto px-4 py-8 md:py-12">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-xs font-medium text-cyan-300 mb-3">
+          <div class="status-dot"></div>
+          LIVE SUITE
+        </div>
+        <h1 class="text-3xl md:text-4xl font-semibold tracking-tight text-white">Command Deck</h1>
+        <p class="mt-1 text-slate-400 text-sm">All systems operational.</p>
+      </div>
+      <div class="flex gap-3">
+        <div class="glass rounded-2xl px-4 py-3 text-center min-w-[80px]">
+          <div class="text-xl font-semibold text-cyan-300" id="total-count">0</div>
+          <div class="text-[10px] uppercase tracking-wider text-slate-500">Apps</div>
+        </div>
+        <div class="glass rounded-2xl px-4 py-3 text-center min-w-[80px]">
+          <div class="text-xl font-semibold text-indigo-300" id="doc-count">0</div>
+          <div class="text-[10px] uppercase tracking-wider text-slate-500">Docs</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex gap-2 mb-6">
+      <button id="tab-apps" class="tab-btn active px-4 py-2 rounded-xl text-sm font-medium glass transition">Apps</button>
+      <button id="tab-docs" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium glass transition">Documents</button>
+    </div>
+
+    <!-- APPS VIEW -->
+    <div id="view-apps">
+      <div class="flex flex-col sm:flex-row gap-4 mb-8">
+        <div class="relative flex-1 max-w-md">
+          <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+          <input id="search" type="text" placeholder="Search apps..."
+            class="w-full pl-11 pr-4 py-3 rounded-2xl glass search-glow outline-none text-sm placeholder:text-slate-500 transition border border-transparent">
+        </div>
+        <div id="filters" class="flex flex-wrap gap-2"></div>
+      </div>
+      <div id="grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4"></div>
+      <div id="empty" class="hidden text-center py-24 text-slate-500">
+        <i class="fa-solid fa-satellite text-3xl mb-3 opacity-30"></i>
+        <div>No apps match your filters.</div>
+      </div>
+    </div>
+
+    <!-- DOCUMENTS VIEW -->
+    <div id="view-docs" class="hidden">
+      <div id="dropzone" class="dropzone glass rounded-2xl p-8 mb-6 text-center border-2 border-dashed border-slate-600 transition cursor-pointer">
+        <i class="fa-solid fa-cloud-arrow-up text-3xl text-cyan-400 mb-3"></i>
+        <div class="text-sm text-slate-300">Drop files here or click to upload</div>
+        <div class="text-xs text-slate-500 mt-1">PDF, text, markdown, images, and more. Stored locally in this browser.</div>
+        <input id="file-input" type="file" multiple class="hidden">
+      </div>
+      <div id="doc-list" class="space-y-2"></div>
+      <div id="doc-empty" class="hidden text-center py-16 text-slate-500">
+        <i class="fa-solid fa-folder-open text-3xl mb-3 opacity-30"></i>
+        <div>No documents yet. Upload the Metaverve Launch Audit to test.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview Modal -->
+  <div id="preview-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+    <div class="glass rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div class="flex items-center justify-between p-4 border-b border-slate-700">
+        <div id="preview-title" class="font-medium text-white truncate pr-4"></div>
+        <div class="flex gap-2">
+          <button id="preview-download" class="px-3 py-1.5 rounded-lg text-xs glass hover:bg-slate-700 transition">Download</button>
+          <button id="preview-close" class="px-3 py-1.5 rounded-lg text-xs glass hover:bg-slate-700 transition">Close</button>
+        </div>
+      </div>
+      <div id="preview-content" class="flex-1 overflow-auto p-4 doc-preview"></div>
+    </div>
+  </div>
+
+  <script>
+    // ========== APPS ==========
+    const apps = [
+      { name: "DOVEY Mission Control", url: "https://dovey-mission-control.vercel.app/", category: "Command", icon: "fa-solid fa-satellite-dish", color: "from-cyan-500 to-blue-600" },
+      { name: "Mission Control", url: "https://mission-control-navy-nine.vercel.app/", category: "Command", icon: "fa-solid fa-tower-broadcast", color: "from-blue-500 to-indigo-600" },
+      { name: "Mission Command", url: "https://mission-command-soundcasino.vercel.app/", category: "Command", icon: "fa-solid fa-satellite", color: "from-indigo-500 to-cyan-500" },
+      { name: "Ultimate Agent", url: "https://ultimate-agent-sandy.vercel.app/", category: "Command", icon: "fa-solid fa-robot", color: "from-indigo-500 to-purple-600" },
+      { name: "Ultimate Agent (alt)", url: "https://ultimateagent.vercel.app/", category: "Command", icon: "fa-solid fa-robot", color: "from-purple-500 to-fuchsia-600" },
+      { name: "Agent Deck", url: "https://agentdeck-ten.vercel.app/", category: "Command", icon: "fa-solid fa-layer-group", color: "from-slate-500 to-slate-700" },
+      { name: "Switchyard", url: "https://switchyard-amber.vercel.app/", category: "Command", icon: "fa-solid fa-arrows-split-up-and-left", color: "from-amber-500 to-orange-600" },
+      { name: "Switchyard (alt)", url: "https://switchyard-dhno.vercel.app/", category: "Command", icon: "fa-solid fa-arrows-split-up-and-left", color: "from-orange-500 to-red-600" },
+      { name: "OLLAMA DESK", url: "https://ollama-command.vercel.app/", category: "Command", icon: "fa-solid fa-desktop", color: "from-emerald-500 to-teal-600" },
+      { name: "Paperclip", url: "https://paperclip-flame.vercel.app/", category: "Specialized", icon: "fa-solid fa-paperclip", color: "from-sky-500 to-blue-600" },
+      { name: "Nova", url: "https://nova-dashboard-gilt-beta.vercel.app/", category: "Specialized", icon: "fa-solid fa-star", color: "from-yellow-400 to-amber-500" },
+      { name: "Prompt Forge", url: "https://prompt-forge-swart.vercel.app/", category: "Specialized", icon: "fa-solid fa-wand-magic-sparkles", color: "from-purple-500 to-fuchsia-600" },
+      { name: "THE VAULT", url: "https://the-vault-alpha-one.vercel.app/", category: "Specialized", icon: "fa-solid fa-vault", color: "from-amber-500 to-yellow-600" },
+      { name: "OptoMax", url: "https://optomax-azure.vercel.app/", category: "Specialized", icon: "fa-solid fa-eye", color: "from-cyan-400 to-blue-500" },
+      { name: "Freq Jackets", url: "https://freq-jackets-soundcasino.vercel.app/", category: "Specialized", icon: "fa-solid fa-shirt", color: "from-amber-600 to-yellow-500" },
+      { name: "Agent Atlas", url: "https://agent-atlas-kohl.vercel.app/", category: "Agents", icon: "fa-solid fa-map", color: "from-cyan-500 to-teal-600" },
+      { name: "The Hive", url: "https://thehive-delta.vercel.app/", category: "Agents", icon: "fa-solid fa-bee", color: "from-yellow-500 to-amber-600" },
+      { name: "AgentForge", url: "https://agentforge-nu-three.vercel.app/", category: "Agents", icon: "fa-solid fa-hammer", color: "from-orange-500 to-red-600" },
+      { name: "Proxy Token Health", url: "https://proxy-token-health.vercel.app/", category: "Agents", icon: "fa-solid fa-heart-pulse", color: "from-rose-500 to-pink-600" },
+      { name: "The Edge Engine", url: "https://the-edge-engine.vercel.app/", category: "Agents", icon: "fa-solid fa-bolt", color: "from-yellow-400 to-orange-500" },
+      { name: "The Sniffer", url: "https://the-sniffer.vercel.app/", category: "Agents", icon: "fa-solid fa-magnifying-glass", color: "from-lime-500 to-green-600" },
+      { name: "Metaverve Work", url: "https://metaverve-work.vercel.app/", category: "Agents", icon: "fa-solid fa-briefcase", color: "from-blue-500 to-cyan-600" },
+      { name: "Ultimate Video", url: "https://ultimatevideo.vercel.app", category: "Media", icon: "fa-solid fa-video", color: "from-red-500 to-rose-600" },
+      { name: "LALARARA", url: "https://lalarara.vercel.app/", category: "Media", icon: "fa-solid fa-music", color: "from-pink-500 to-fuchsia-600" },
+      { name: "SoundCasino.App", url: "https://soundcasino.app/", category: "Media", icon: "fa-solid fa-dice", color: "from-violet-500 to-purple-600" },
+      { name: "Sound Casino Virality", url: "https://sound-casino-virality.vercel.app/", category: "Media", icon: "fa-solid fa-fire", color: "from-orange-500 to-red-600" },
+      { name: "Track Forge", url: "https://track-forge-soundcasino.vercel.app", category: "Media", icon: "fa-solid fa-compact-disc", color: "from-indigo-500 to-blue-600" },
+      { name: "CLIPZ", url: "https://money-printer-v2-seven.vercel.app/", category: "Media", icon: "fa-solid fa-clapperboard", color: "from-emerald-500 to-green-600" },
+      { name: "Storysuite Hub", url: "https://storysuite-hub.vercel.app/", category: "Media", icon: "fa-solid fa-book-open", color: "from-amber-500 to-yellow-600" },
+      { name: "Storysuite", url: "https://storysuite-platform.vercel.app/", category: "Media", icon: "fa-solid fa-pen-nib", color: "from-purple-500 to-indigo-600" },
+      { name: "FUWZAI", url: "https://fuwzai.vercel.app/", category: "Specialized", icon: "fa-solid fa-plug", color: "from-cyan-500 to-blue-600" },
+      { name: "MUWZAI", url: "https://muwzai.vercel.app/", category: "Specialized", icon: "fa-solid fa-sparkles", color: "from-fuchsia-500 to-pink-600" },
+      { name: "Keto Coach", url: "https://keto-coach-alpha.vercel.app/", category: "Specialized", icon: "fa-solid fa-apple-whole", color: "from-green-500 to-emerald-600" },
+      { name: "Founders Radar", url: "https://founder-radar-new.vercel.app/", category: "Specialized", icon: "fa-solid fa-satellite", color: "from-blue-500 to-indigo-600" },
+      { name: "Marketing Department", url: "https://marketingdepartment-virid.vercel.app/", category: "Specialized", icon: "fa-solid fa-bullhorn", color: "from-orange-500 to-amber-600" },
+      { name: "VANAMALZ Education", url: "https://vanamalz-education.vercel.app/", category: "Specialized", icon: "fa-solid fa-graduation-cap", color: "from-violet-500 to-purple-600" },
+      { name: "VANAMALZ Grok", url: "https://vanamalzeducation.vercel.app/", category: "Specialized", icon: "fa-solid fa-graduation-cap", color: "from-purple-500 to-fuchsia-600" },
+      { name: "Sector 9", url: "https://sector9-seven.vercel.app/", category: "Specialized", icon: "fa-solid fa-hexagon", color: "from-slate-500 to-zinc-700" },
+      { name: "WAR-LAW-D", url: "https://war-law-d.vercel.app/", category: "Specialized", icon: "fa-solid fa-scale-balanced", color: "from-red-500 to-rose-600" },
+      { name: "HOS-SAUNA", url: "https://hos-sauna.vercel.app/", category: "Specialized", icon: "fa-solid fa-hot-tub-person", color: "from-orange-500 to-red-600" },
+      { name: "Strategy Lab", url: "https://strategy-lab-ecru.vercel.app/", category: "Specialized", icon: "fa-solid fa-flask", color: "from-teal-500 to-cyan-600" },
+      { name: "Data Arbitrage", url: "https://data-arbitrage.vercel.app/", category: "Specialized", icon: "fa-solid fa-chart-line", color: "from-emerald-500 to-teal-600" },
+      { name: "Common", url: "https://common-kappa.vercel.app/", category: "Specialized", icon: "fa-solid fa-users", color: "from-blue-500 to-indigo-600" },
+      { name: "PUSHd", url: "https://pushd.vercel.app", category: "Specialized", icon: "fa-solid fa-paper-plane", color: "from-sky-500 to-blue-600" },
+      { name: "Crosdoggy 4000", url: "https://brick-mint-pixel-mint.grok.me", category: "Grok", icon: "fa-solid fa-dog", color: "from-amber-500 to-orange-600" },
+      { name: "Randyland", url: "https://island-bamboo-field-oasis.grok.me", category: "Grok", icon: "fa-solid fa-campground", color: "from-green-500 to-emerald-600" },
+      { name: "Tiny Proxies", url: "https://charm-jolly-island-stone.grok.me", category: "Grok", icon: "fa-solid fa-link", color: "from-cyan-500 to-blue-600" },
+      { name: "PromptForge", url: "https://promtforge.grok.me", category: "Grok", icon: "fa-solid fa-wand-magic-sparkles", color: "from-purple-500 to-fuchsia-600" },
+      { name: "Fam Assist AI", url: "https://blaze-brush-bold-thunder.grok.me", category: "Grok", icon: "fa-solid fa-house-user", color: "from-rose-500 to-pink-600" },
+      { name: "The Fly", url: "https://eagle-wave-granite-xenon.grok.me/", category: "Grok", icon: "fa-solid fa-plane", color: "from-sky-500 to-cyan-600" },
+      { name: "BioPepCo", url: "https://biopep.grok.me", category: "Grok", icon: "fa-solid fa-flask-vial", color: "from-emerald-500 to-teal-600" },
+      { name: "LOCKTRACK", url: "https://niche.grok.me/", category: "Grok", icon: "fa-solid fa-lock", color: "from-slate-500 to-zinc-700" },
+      { name: "Metaverve Exchange", url: "https://justins-barbershop.grok.me", category: "Grok", icon: "fa-solid fa-store", color: "from-indigo-500 to-purple-600" },
+    ];
+
+    const categories = ["All", ...new Set(apps.map(a => a.category))];
+    let activeCategory = "All";
+    let searchTerm = "";
+
+    function renderFilters() {
+      const el = document.getElementById("filters");
+      el.innerHTML = categories.map(cat => `
+        <button onclick="setCategory('${cat}')"
+          class="filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium transition border border-transparent
+                 ${activeCategory === cat ? 'active' : 'glass text-slate-400 hover:text-slate-200'}">
+          ${cat}
+        </button>
+      `).join("");
+    }
+
+    function renderGrid() {
+      const filtered = apps.filter(app => {
+        const matchCat = activeCategory === "All" || app.category === activeCategory;
+        const matchSearch = app.name.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchCat && matchSearch;
+      });
+      const grid = document.getElementById("grid");
+      const empty = document.getElementById("empty");
+      document.getElementById("total-count").textContent = apps.length;
+      if (filtered.length === 0) {
+        grid.innerHTML = "";
+        empty.classList.remove("hidden");
+        return;
+      }
+      empty.classList.add("hidden");
+      grid.innerHTML = filtered.map(app => `
+        <a href="${app.url}" target="_blank" rel="noopener noreferrer"
+           class="card glass rounded-2xl p-4 flex flex-col items-center text-center group">
+          <div class="icon-wrap w-12 h-12 rounded-xl bg-gradient-to-br ${app.color} flex items-center justify-center mb-3 shadow-md">
+            <i class="${app.icon} text-white text-lg"></i>
+          </div>
+          <div class="text-[13px] font-medium text-slate-100 leading-tight line-clamp-2">${app.name}</div>
+          <div class="text-[10px] text-slate-500 mt-1.5 uppercase tracking-wider">${app.category}</div>
+        </a>
+      `).join("");
+    }
+
+    function setCategory(cat) {
+      activeCategory = cat;
+      renderFilters();
+      renderGrid();
+    }
+
+    document.getElementById("search").addEventListener("input", (e) => {
+      searchTerm = e.target.value;
+      renderGrid();
+    });
+
+    // ========== DOCUMENTS (IndexedDB) ==========
+    const DB_NAME = "command-deck-docs";
+    const STORE = "files";
+    let db;
+
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = () => {
+          req.result.createObjectStore(STORE, { keyPath: "id", autoIncrement: true });
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function initDocs() {
+      db = await openDB();
+      await renderDocs();
+    }
+
+    function getAllDocs() {
+      return new Promise((resolve) => {
+        const tx = db.transaction(STORE, "readonly");
+        const req = tx.objectStore(STORE).getAll();
+        req.onsuccess = () => resolve(req.result || []);
+      });
+    }
+
+    async function addDocs(fileList) {
+      const tx = db.transaction(STORE, "readwrite");
+      const store = tx.objectStore(STORE);
+      for (const file of fileList) {
+        const buf = await file.arrayBuffer();
+        store.add({
+          name: file.name,
+          type: file.type || "application/octet-stream",
+          size: file.size,
+          added: Date.now(),
+          data: buf
+        });
+      }
+      await new Promise(r => { tx.oncomplete = r; });
+      await renderDocs();
+    }
+
+    async function deleteDoc(id) {
+      const tx = db.transaction(STORE, "readwrite");
+      tx.objectStore(STORE).delete(id);
+      await new Promise(r => { tx.oncomplete = r; });
+      await renderDocs();
+    }
+
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + " B";
+      if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + " KB";
+      return (bytes/(1024*1024)).toFixed(1) + " MB";
+    }
+
+    async function renderDocs() {
+      const docs = await getAllDocs();
+      docs.sort((a,b) => b.added - a.added);
+      document.getElementById("doc-count").textContent = docs.length;
+      const list = document.getElementById("doc-list");
+      const empty = document.getElementById("doc-empty");
+      if (!docs.length) {
+        list.innerHTML = "";
+        empty.classList.remove("hidden");
+        return;
+      }
+      empty.classList.add("hidden");
+      list.innerHTML = docs.map(d => `
+        <div class="glass rounded-xl p-3 flex items-center gap-3 group">
+          <div class="w-10 h-10 rounded-lg bg-slate-700/50 flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid ${d.type.includes('pdf') ? 'fa-file-pdf text-red-400' : d.type.startsWith('image/') ? 'fa-file-image text-green-400' : 'fa-file-lines text-cyan-400'} text-lg"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-medium text-slate-100 truncate">${d.name}</div>
+            <div class="text-[10px] text-slate-500">${formatSize(d.size)} · ${new Date(d.added).toLocaleDateString()}</div>
+          </div>
+          <div class="flex gap-1">
+            <button onclick="window.previewDoc(${d.id})" class="px-2.5 py-1 rounded text-xs glass hover:bg-slate-700">Read</button>
+            <button onclick="window.downloadDoc(${d.id})" class="px-2.5 py-1 rounded text-xs glass hover:bg-slate-700">↓</button>
+            <button onclick="window.deleteDoc(${d.id})" class="px-2.5 py-1 rounded text-xs glass hover:bg-rose-900/40 text-rose-400">✕</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    let currentBlobUrl = null;
+    let currentDoc = null;
+
+    async function previewDoc(id) {
+      const tx = db.transaction(STORE, "readonly");
+      const req = tx.objectStore(STORE).get(id);
+      req.onsuccess = async () => {
+        const doc = req.result;
+        if (!doc) return;
+        currentDoc = doc;
+        if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+        const blob = new Blob([doc.data], { type: doc.type });
+        currentBlobUrl = URL.createObjectURL(blob);
+        document.getElementById("preview-title").textContent = doc.name;
+        const content = document.getElementById("preview-content");
+        content.innerHTML = "";
+        if (doc.type.startsWith("image/")) {
+          content.innerHTML = `<img src="${currentBlobUrl}" class="max-w-full rounded-lg mx-auto">`;
+        } else if (doc.type === "application/pdf" || doc.name.toLowerCase().endsWith(".pdf")) {
+          content.innerHTML = `
+            <div class="mb-3 flex justify-end">
+              <a href="${currentBlobUrl}" target="_blank" class="px-3 py-1.5 rounded-lg text-xs glass hover:bg-slate-700">Open in new tab</a>
+            </div>
+            <iframe src="${currentBlobUrl}" class="w-full h-[65vh] rounded-lg border-0 bg-slate-900"></iframe>
+          `;
+        } else if (doc.type.startsWith("text/") || doc.name.match(/\.(md|txt|json|csv|log)$/i)) {
+          const text = await blob.text();
+          content.innerHTML = `<pre class="text-xs text-slate-300 whitespace-pre-wrap">${escapeHtml(text)}</pre>`;
+        } else {
+          content.innerHTML = `<div class="text-center py-12 text-slate-400">
+            <i class="fa-solid fa-file text-4xl mb-3 opacity-40"></i>
+            <div>Preview not available for this type.</div>
+            <button onclick="downloadDoc(${id})" class="mt-4 px-4 py-2 rounded-xl glass text-sm">Download to open</button>
+          </div>`;
+        }
+        document.getElementById("preview-modal").classList.remove("hidden");
+      };
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/[&<>"']/g, c => ({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[c]));
+    }
+
+    async function downloadDoc(id) {
+      const tx = db.transaction(STORE, "readonly");
+      const req = tx.objectStore(STORE).get(id);
+      req.onsuccess = () => {
+        const doc = req.result;
+        if (!doc) return;
+        const blob = new Blob([doc.data], { type: doc.type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = doc.name;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      };
+    }
+
+    document.getElementById("preview-download").addEventListener("click", () => {
+      if (currentDoc) downloadDoc(currentDoc.id);
+    });
+    document.getElementById("preview-close").addEventListener("click", () => {
+      document.getElementById("preview-modal").classList.add("hidden");
+      if (currentBlobUrl) { URL.revokeObjectURL(currentBlobUrl); currentBlobUrl = null; }
+    });
+
+    // Dropzone
+    const dropzone = document.getElementById("dropzone");
+    const fileInput = document.getElementById("file-input");
+    dropzone.addEventListener("click", () => fileInput.click());
+    dropzone.addEventListener("dragover", (e) => { e.preventDefault(); dropzone.classList.add("dragover"); });
+    dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+    dropzone.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("dragover");
+      if (e.dataTransfer.files.length) await addDocs(e.dataTransfer.files);
+    });
+    fileInput.addEventListener("change", async () => {
+      if (fileInput.files.length) await addDocs(fileInput.files);
+      fileInput.value = "";
+    });
+
+    // Make functions globally available for inline handlers
+    window.previewDoc = previewDoc;
+    window.downloadDoc = downloadDoc;
+    window.deleteDoc = deleteDoc;
+
+    // ========== TABS ==========
+    document.getElementById("tab-apps").addEventListener("click", () => {
+      document.getElementById("view-apps").classList.remove("hidden");
+      document.getElementById("view-docs").classList.add("hidden");
+      document.getElementById("tab-apps").classList.add("active");
+      document.getElementById("tab-docs").classList.remove("active");
+    });
+    document.getElementById("tab-docs").addEventListener("click", () => {
+      document.getElementById("view-apps").classList.add("hidden");
+      document.getElementById("view-docs").classList.remove("hidden");
+      document.getElementById("tab-apps").classList.remove("active");
+      document.getElementById("tab-docs").classList.add("active");
+    });
+
+    // Init
+    renderFilters();
+    renderGrid();
+    initDocs();
+  </script>
+</body>
+</html>
