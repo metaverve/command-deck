@@ -99,6 +99,7 @@
     <div class="flex gap-2 mb-6">
       <button id="tab-apps" class="tab-btn active px-4 py-2 rounded-xl text-sm font-medium glass transition">Apps</button>
       <button id="tab-docs" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium glass transition">Documents</button>
+      <button id="tab-ops" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium glass transition">Ops Planning</button>
     </div>
 
     <!-- APPS VIEW -->
@@ -123,14 +124,56 @@
       <div id="dropzone" class="dropzone glass rounded-2xl p-8 mb-6 text-center border-2 border-dashed border-slate-600 transition cursor-pointer">
         <i class="fa-solid fa-cloud-arrow-up text-3xl text-cyan-400 mb-3"></i>
         <div class="text-sm text-slate-300">Drop files here or click to upload</div>
-        <div class="text-xs text-slate-500 mt-1">PDF, text, markdown, images, and more. Stored locally in this browser.</div>
+        <div class="text-xs text-slate-500 mt-1">PDF, text, markdown, images, and more. Saved in this browser on this device (up to 200 MB per file).</div>
         <input id="file-input" type="file" multiple class="hidden">
       </div>
+      <div id="upload-status" class="hidden mb-4 text-xs rounded-xl px-4 py-2 glass" role="status" aria-live="polite"></div>
       <div id="doc-list" class="space-y-2"></div>
       <div id="doc-empty" class="hidden text-center py-16 text-slate-500">
         <i class="fa-solid fa-folder-open text-3xl mb-3 opacity-30"></i>
         <div>No documents yet. Upload the Metaverve Launch Audit to test.</div>
       </div>
+    </div>
+    <!-- OPS PLANNING VIEW (Metaverve Work) -->
+    <div id="view-ops" class="hidden">
+    <div class="glass rounded-2xl p-6 mb-4">
+      <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-semibold text-white">Ops Planning</h2>
+          <p class="mt-1 text-sm text-slate-400 max-w-2xl">Work management for boards, groups and tasks, with table and Kanban views, comments, search and filters, dashboards and one status-based automation. Built from the Metaverve Work app (version 0.2.0).</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <a id="ops-open" href="https://metaverve-work.vercel.app/" target="_blank" rel="noopener noreferrer" class="px-4 py-2 rounded-xl text-sm font-medium bg-cyan-500/20 text-cyan-200 border border-cyan-400/30 hover:bg-cyan-500/30 transition"><i class="fa-solid fa-arrow-up-right-from-square mr-2"></i>Open Ops Planning</a>
+          <a href="https://metaverve-work.vercel.app/sign-in" target="_blank" rel="noopener noreferrer" class="px-4 py-2 rounded-xl text-sm font-medium glass hover:bg-slate-700 transition"><i class="fa-brands fa-github mr-2"></i>Sign in</a>
+        </div>
+      </div>
+      <div class="mt-4 text-xs text-amber-200/90 bg-amber-500/10 border border-amber-400/20 rounded-xl px-4 py-3">
+        Opens in a new tab. The app blocks being shown inside other sites for security, and it signs in with the owner's GitHub account only.
+      </div>
+    </div>
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="glass rounded-2xl p-5">
+        <h3 class="text-sm font-semibold text-white mb-3"><i class="fa-solid fa-list-check text-cyan-300 mr-2"></i>What it does</h3>
+        <ul class="text-sm text-slate-300 space-y-1.5 list-disc pl-5">
+          <li>Create and rename boards, create groups, create, edit, regroup and archive tasks</li>
+          <li>Task title, description, status, priority, assignee and due date</li>
+          <li>Table and Kanban views, with drag and drop and keyboard status controls</li>
+          <li>Task comments and activity history, combined filters, workspace search and My Work</li>
+          <li>Counts, completion and workload, with drill-through</li>
+          <li>Optional automation, off by default: move a task to a chosen group when it's marked Done</li>
+        </ul>
+      </div>
+      <div class="glass rounded-2xl p-5">
+        <h3 class="text-sm font-semibold text-white mb-3"><i class="fa-solid fa-circle-info text-indigo-300 mr-2"></i>Good to know</h3>
+        <ul class="text-sm text-slate-300 space-y-1.5 list-disc pl-5">
+          <li>Owner-only access, with no invites or live collaboration yet</li>
+          <li>Assignees, comments and automations are records only. It sends no notifications or messages.</li>
+          <li>Archived tasks are kept, but there's no restore screen yet</li>
+          <li>No custom columns, subitems, dependencies, timeline or attachments</li>
+          <li>The activity log shows the latest 300 events</li>
+        </ul>
+      </div>
+    </div>
     </div>
   </div>
 
@@ -172,7 +215,7 @@
       { name: "Proxy Token Health", url: "https://proxy-token-health.vercel.app/", category: "Agents", icon: "fa-solid fa-heart-pulse", color: "from-rose-500 to-pink-600" },
       { name: "The Edge Engine", url: "https://the-edge-engine.vercel.app/", category: "Agents", icon: "fa-solid fa-bolt", color: "from-yellow-400 to-orange-500" },
       { name: "The Sniffer", url: "https://the-sniffer.vercel.app/", category: "Agents", icon: "fa-solid fa-magnifying-glass", color: "from-lime-500 to-green-600" },
-      { name: "Metaverve Work", url: "https://metaverve-work.vercel.app/", category: "Agents", icon: "fa-solid fa-briefcase", color: "from-blue-500 to-cyan-600" },
+      { name: "Ops Planning", url: "https://metaverve-work.vercel.app/", category: "Agents", icon: "fa-solid fa-briefcase", color: "from-blue-500 to-cyan-600" },
       { name: "Ultimate Video", url: "https://ultimatevideo.vercel.app", category: "Media", icon: "fa-solid fa-video", color: "from-red-500 to-rose-600" },
       { name: "AutoVidTurbo", url: "https://autovidturbo-soundcasino.vercel.app/", category: "Media", icon: "fa-solid fa-film", color: "from-rose-500 to-pink-600" },
       { name: "LALARARA", url: "https://lalarara.vercel.app/", category: "Media", icon: "fa-solid fa-music", color: "from-pink-500 to-fuchsia-600" },
@@ -277,39 +320,85 @@
     }
 
     async function initDocs() {
-      db = await openDB();
-      await renderDocs();
+      try {
+        db = await openDB();
+        // Ask the browser to keep these files instead of clearing them when space runs low.
+        if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+        await renderDocs();
+      } catch (err) {
+        showUploadStatus("This browser blocked file storage (private mode can do this). Uploads won't be saved.", "error");
+      }
     }
 
     function getAllDocs() {
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE, "readonly");
         const req = tx.objectStore(STORE).getAll();
         req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
       });
     }
 
+    const MAX_FILE_BYTES = 200 * 1024 * 1024;
+
+    function showUploadStatus(msg, kind) {
+      const el = document.getElementById("upload-status");
+      el.textContent = msg;
+      el.className = "mb-4 text-xs rounded-xl px-4 py-2 glass " +
+        (kind === "error" ? "text-rose-300 border border-rose-500/30" : kind === "ok" ? "text-emerald-300 border border-emerald-500/30" : "text-slate-300");
+    }
+
+    function txDone(tx) {
+      return new Promise((resolve, reject) => {
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error || new Error("Save was cancelled"));
+      });
+    }
+
+    // Read every file into memory FIRST, then write them all in one transaction.
+    // (An IndexedDB transaction closes as soon as code awaits anything else, such as
+    // file.arrayBuffer(), so awaiting inside the transaction made every save fail.)
     async function addDocs(fileList) {
-      const tx = db.transaction(STORE, "readwrite");
-      const store = tx.objectStore(STORE);
-      for (const file of fileList) {
-        const buf = await file.arrayBuffer();
-        store.add({
-          name: file.name,
-          type: file.type || "application/octet-stream",
-          size: file.size,
-          added: Date.now(),
-          data: buf
-        });
+      const files = Array.from(fileList);
+      if (!files.length) return;
+      if (!db) { showUploadStatus("Storage isn't ready yet. Reload the page and try again.", "error"); return; }
+      const records = [];
+      const skipped = [];
+      showUploadStatus("Saving " + files.length + " file" + (files.length > 1 ? "s" : "") + "…");
+      for (const file of files) {
+        if (file.size === 0) { skipped.push(file.name + " (empty)"); continue; }
+        if (file.size > MAX_FILE_BYTES) { skipped.push(file.name + " (over 200 MB)"); continue; }
+        try {
+          const buf = await file.arrayBuffer();
+          records.push({ name: file.name, type: file.type || "application/octet-stream", size: file.size, added: Date.now(), data: buf });
+        } catch (err) { skipped.push(file.name + " (couldn't be read)"); }
       }
-      await new Promise(r => { tx.oncomplete = r; });
+      if (records.length) {
+        try {
+          const tx = db.transaction(STORE, "readwrite");
+          const done = txDone(tx);
+          const store = tx.objectStore(STORE);
+          for (const rec of records) store.add(rec);
+          await done;
+        } catch (err) {
+          const quota = err && (err.name === "QuotaExceededError" || /quota/i.test(String(err.message)));
+          showUploadStatus(quota ? "Not saved: this browser is out of storage space." : "Not saved: " + (err && err.message ? err.message : "unknown error"), "error");
+          await renderDocs();
+          return;
+        }
+      }
       await renderDocs();
+      const saved = records.length ? "Saved " + records.length + " file" + (records.length > 1 ? "s" : "") + "." : "";
+      const skip = skipped.length ? " Skipped: " + skipped.join(", ") + "." : "";
+      showUploadStatus((saved + skip).trim(), records.length ? "ok" : "error");
     }
 
     async function deleteDoc(id) {
       const tx = db.transaction(STORE, "readwrite");
+      const done = txDone(tx);
       tx.objectStore(STORE).delete(id);
-      await new Promise(r => { tx.oncomplete = r; });
+      await done;
       await renderDocs();
     }
 
@@ -334,10 +423,10 @@
       list.innerHTML = docs.map(d => `
         <div class="glass rounded-xl p-3 flex items-center gap-3 group">
           <div class="w-10 h-10 rounded-lg bg-slate-700/50 flex items-center justify-center flex-shrink-0">
-            <i class="fa-solid ${d.type.includes('pdf') ? 'fa-file-pdf text-red-400' : d.type.startsWith('image/') ? 'fa-file-image text-green-400' : 'fa-file-lines text-cyan-400'} text-lg"></i>
+            <i class="fa-solid ${(d.type.includes('pdf') || /\.pdf$/i.test(d.name)) ? 'fa-file-pdf text-red-400' : d.type.startsWith('image/') ? 'fa-file-image text-green-400' : 'fa-file-lines text-cyan-400'} text-lg"></i>
           </div>
           <div class="flex-1 min-w-0">
-            <div class="text-sm font-medium text-slate-100 truncate">${d.name}</div>
+            <div class="text-sm font-medium text-slate-100 truncate doc-name">${escapeHtml(d.name)}</div>
             <div class="text-[10px] text-slate-500">${formatSize(d.size)} · ${new Date(d.added).toLocaleDateString()}</div>
           </div>
           <div class="flex gap-1">
@@ -389,7 +478,7 @@
     }
 
     function escapeHtml(s) {
-      return s.replace(/[&<>"']/g, c => ({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[c]));
+      return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
     }
 
     async function downloadDoc(id) {
@@ -438,18 +527,20 @@
     window.deleteDoc = deleteDoc;
 
     // ========== TABS ==========
-    document.getElementById("tab-apps").addEventListener("click", () => {
-      document.getElementById("view-apps").classList.remove("hidden");
-      document.getElementById("view-docs").classList.add("hidden");
-      document.getElementById("tab-apps").classList.add("active");
-      document.getElementById("tab-docs").classList.remove("active");
-    });
-    document.getElementById("tab-docs").addEventListener("click", () => {
-      document.getElementById("view-apps").classList.add("hidden");
-      document.getElementById("view-docs").classList.remove("hidden");
-      document.getElementById("tab-apps").classList.remove("active");
-      document.getElementById("tab-docs").classList.add("active");
-    });
+    const TABS = { apps: "view-apps", docs: "view-docs", ops: "view-ops" };
+    function showTab(name) {
+      if (!TABS[name]) name = "apps";
+      for (const [key, viewId] of Object.entries(TABS)) {
+        document.getElementById(viewId).classList.toggle("hidden", key !== name);
+        document.getElementById("tab-" + key).classList.toggle("active", key === name);
+      }
+      if (location.hash !== "#" + name) history.replaceState(null, "", "#" + name);
+    }
+    for (const key of Object.keys(TABS)) {
+      document.getElementById("tab-" + key).addEventListener("click", () => showTab(key));
+    }
+    window.addEventListener("hashchange", () => showTab(location.hash.slice(1)));
+    showTab(location.hash.slice(1) || "apps");
 
     // Init
     renderFilters();
